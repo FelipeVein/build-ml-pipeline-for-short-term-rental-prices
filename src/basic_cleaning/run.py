@@ -35,6 +35,10 @@ def go(args):
     # Convert last_review column to datetime
     df['last_review'] = pd.to_datetime(df['last_review'])
 
+    # Remove rows with logitude and latitude out of a certain range
+    idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
+    df = df[idx].copy()
+
     # save to a csv file
     logger.info("Saving cleaned artifact")
     df.to_csv("clean_sample.csv", index=False)
