@@ -5,6 +5,8 @@ Download from W&B the raw dataset and apply some basic data cleaning, exporting 
 import argparse
 import logging
 import wandb
+import pandas as pd
+import os
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
@@ -18,12 +20,39 @@ def go(args):
 
     # Download input artifact. This will also log that this script is using this
     # particular version of the artifact
-    # artifact_local_path = run.use_artifact(args.input_artifact).file()
+    logger.info("Downloading input artifact")
+    artifact_local_path = run.use_artifact(args.input_artifact).file()
 
-    ######################
-    # YOUR CODE HERE     #
-    ######################
+    # Load the artifact as a pandas dataframe
+    logger.info("Loading input artifact")
+    df = pd.read_csv(artifact_local_path)
 
+    # Apply some basic data cleaning
+    logger.info("Applying basic cleaning")
+    idx = df['price'].between(args.min_price, args.max_price)
+    df = df[idx].copy()
+
+    # Convert last_review column to datetime
+    df['last_review'] = pd.to_datetime(df['last_review'])
+
+    # save to a csv file
+    logger.info("Saving cleaned artifact")
+    df.to_csv("clean_sample.csv", index=False)
+
+    # Save the cleaned dataframe to a new artifact
+    artifact = wandb.Artifact(
+        args.output_artifact,
+        type=args.output_type,
+        description=args.output_description
+    )
+    artifact.add_file("clean_sample.csv")
+    run.log_artifact(artifact)
+
+    logger.info("Done!")
+
+    os.remove("clean_sample.csv")
+
+    run.finish()
 
 if __name__ == "__main__":
 
@@ -32,43 +61,43 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--input_artifact", 
-        type=## INSERT TYPE HERE: str, float or int,
-        help=## INSERT DESCRIPTION HERE,
+        type=str,
+        help="The name of the artifact to download",
         required=True
     )
 
     parser.add_argument(
         "--output_artifact", 
-        type=## INSERT TYPE HERE: str, float or int,
-        help=## INSERT DESCRIPTION HERE,
+        type=str,
+        help="The name of the artifact to save",
         required=True
     )
 
     parser.add_argument(
         "--output_type", 
-        type=## INSERT TYPE HERE: str, float or int,
-        help=## INSERT DESCRIPTION HERE,
+        type=str,
+        help="The type of the artifact to save",
         required=True
     )
 
     parser.add_argument(
         "--output_description", 
-        type=## INSERT TYPE HERE: str, float or int,
-        help=## INSERT DESCRIPTION HERE,
+        type=str,
+        help="The description of the artifact to save",
         required=True
     )
 
     parser.add_argument(
         "--min_price", 
-        type=## INSERT TYPE HERE: str, float or int,
-        help=## INSERT DESCRIPTION HERE,
+        type=float,
+        help="The minimum price to keep",
         required=True
     )
 
     parser.add_argument(
         "--max_price", 
-        type=## INSERT TYPE HERE: str, float or int,
-        help=## INSERT DESCRIPTION HERE,
+        type=float,
+        help="The maximum price to keep",
         required=True
     )
 

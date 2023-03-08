@@ -38,9 +38,11 @@ def go(config: DictConfig):
         if "download" in active_steps:
             # Download file and load in W&B
             _ = mlflow.run(
-                f"{config['main']['components_repository']}/get_data",
+                os.path.join(hydra.utils.get_original_cwd(),
+                              "components",
+                              "get_data"
+                ),
                 "main",
-                version='main',
                 parameters={
                     "sample": config["etl"]["sample"],
                     "artifact_name": "sample.csv",
@@ -50,10 +52,23 @@ def go(config: DictConfig):
             )
 
         if "basic_cleaning" in active_steps:
-            ##################
-            # Implement here #
-            ##################
-            pass
+            # Do some basic cleaning
+            _ = mlflow.run(
+                os.path.join(hydra.utils.get_original_cwd(),
+                              "src",
+                              "basic_cleaning"
+                ),
+                "main",
+                parameters={
+                    "input_artifact": "sample.csv:latest",
+                    "output_artifact": "clean_sample.csv",
+                    "output_type": "clean_data",
+                    "output_description": "Data without outliers and with last_review converted to datetime",
+                    "min_price": config["etl"]["min_price"],
+                    "max_price": config["etl"]["max_price"]
+                }
+            )
+
 
         if "data_check" in active_steps:
             ##################
@@ -71,7 +86,7 @@ def go(config: DictConfig):
 
             # NOTE: we need to serialize the random forest configuration into JSON
             rf_config = os.path.abspath("rf_config.json")
-            with open(rf_config, "w+") as fp:
+            with open(rf_config, "w+", encoding='utf-8') as fp:
                 json.dump(dict(config["modeling"]["random_forest"].items()), fp)  # DO NOT TOUCH
 
             # NOTE: use the rf_config we just created as the rf_config parameter for the train_random_forest
