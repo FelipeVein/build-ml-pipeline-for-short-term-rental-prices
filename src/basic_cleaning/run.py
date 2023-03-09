@@ -12,8 +12,32 @@ import os
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
+def remove_outliers(df: pd.DataFrame, min: float, max: float, column: str):
+    """
+    Remove outliers from a dataframe
+    
+    Args:
+        df: The dataframe to remove outliers from
+        min: The minimum value to keep
+        max: The maximum value to keep
+        column: The column to remove outliers from
+
+    Returns:
+        A new dataframe with the outliers removed
+    """
+    idx = df[column].between(min, max)
+    return df[idx].copy()
 
 def go(args):
+    """
+    Download from W&B the raw dataset and apply some basic data cleaning, exporting the result to a new artifact
+
+    Args:
+        args: The command line arguments
+
+    Returns:
+        None
+    """
 
     run = wandb.init(job_type="basic_cleaning")
     run.config.update(args)
@@ -29,15 +53,14 @@ def go(args):
 
     # Apply some basic data cleaning
     logger.info("Applying basic cleaning")
-    idx = df['price'].between(args.min_price, args.max_price)
-    df = df[idx].copy()
+    df = remove_outliers(df, args.min_price, args.max_price, "price")
 
     # Convert last_review column to datetime
     df['last_review'] = pd.to_datetime(df['last_review'])
 
     # Remove rows with logitude and latitude out of a certain range
-    idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
-    df = df[idx].copy()
+    df = remove_outliers(df, -74.25, -73.50, "longitude")
+    df = remove_outliers(df, 40.5, 41.2, "latitude")
 
     # save to a csv file
     logger.info("Saving cleaned artifact")
