@@ -6,28 +6,28 @@ entry_points:
     parameters:
 
       input_artifact:
-        description: ## ADD DESCRIPTION
+        description: "The name of the artifact to download"
         type: string
 
       output_artifact:
-        description: ## ADD DESCRIPTION
+        description: "The name of the artifact to save"
         type: string
 
       output_type:
-        description: ## ADD DESCRIPTION
+        description: "The type of the output artifact."
         type: string
 
       output_description:
-        description: ## ADD DESCRIPTION
+        description: "The description of the output artifact."
         type: string
 
       min_price:
-        description: ## ADD DESCRIPTION
-        type: string
+        description: "The minimum price value to keep on the data cleaning process."
+        type: float
 
       max_price:
-        description: ## ADD DESCRIPTION
-        type: string
+        description: "The maximum price value to keep on the data cleaning process."
+        type: float
 
 
     command: >-
